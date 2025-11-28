@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+credentials.json
+token.pickle
+.DS_Store
+.venv/

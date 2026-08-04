@@ -1,85 +1,71 @@
 # CSV to Google Sheets Auto-Uploader
 
-This tool allows you to double-click a `.csv` file in macOS Finder (via Automator) to automatically upload it to Google Drive, convert it to a Google Sheet, and open it in your browser.
+Upload a `.csv` file to Google Drive, convert it to a Google Sheet, and open it in your browser.
+
+Works the same on every Mac: **double-click** a CSV, or **right-click → Upload to Sheets** for downloaded files.
 
 ## Prerequisites
 
-1.  **Python 3**: Ensure Python 3 is installed.
-2.  **Google Cloud Project**: You need a Google Cloud Project with the Drive API enabled.
+1. **Python 3** (macOS built-in or Homebrew)
+2. **Google Cloud Project** with the Drive API enabled
+3. **`Csv_to_Sheets_rbz.app`** in iCloud Drive (source Automator app)
 
-## Setup
+## Setup (run on each Mac)
 
-### 1. Install Dependencies
-
-Open a terminal and navigate to this folder:
-
-```bash
-cd /path/to/csv_to_drive
-pip3 install -r requirements.txt
-```
-
-### 2. Configure Google Credentials
-
-1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2.  Create a new project or select an existing one.
-3.  Enable the **Google Drive API**.
-4.  Go to **Credentials** -> **Create Credentials** -> **OAuth client ID**.
-5.  Select **Desktop app**.
-6.  Download the JSON file and rename it to `credentials.json`.
-7.  Place `credentials.json` in this folder (`/Users/renebravo/Python/csv_to_drive`).
-
-### 3. First Run (Authentication)
-
-Run the script manually once to authenticate and generate the `token.pickle` file:
+Clone or pull this repo, then run the installer:
 
 ```bash
-python3 csv_to_sheets.py /path/to/test.csv
+cd /Users/renebravo/Python/csv_to_drive
+./install.sh
 ```
 
-A browser window will open asking for permission. Allow access.
+This installs everything:
 
-### 4. Create macOS Automator Application
+- Python virtual environment (`.venv/`) with dependencies
+- **Double-click default** — `~/Applications/Upload to Sheets.app`
+- **Right-click action** — Quick Action "Upload to Sheets" in Finder
 
-1.  Open **Automator** on your Mac.
-2.  Select **New Document** -> **Application**.
-3.  Search for **Run Shell Script** and drag it to the workflow area.
-4.  In the "Pass input" dropdown, select **as arguments**.
-5.  Paste the following command (update the path to your `launcher.sh`):
+### Google credentials (once per repo)
 
-    ```bash
-    /Users/renebravo/Python/csv_to_drive/launcher.sh "$@"
-    ```
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create or select a project.
+3. Enable the **Google Drive API**.
+4. Create **OAuth credentials** (Desktop app).
+5. Download the JSON and save as `credentials.json` in this folder.
 
-    *Note: Ensure `launcher.sh` is executable (`chmod +x launcher.sh`).*
+You can copy `credentials.json` between Macs (it is gitignored).
 
-6.  Save the Automator app (e.g., "CSV to Sheets").
+### First-time authentication (once per Mac)
 
-### 5. Usage
+```bash
+./launcher.sh test.csv
+```
 
-1.  Right-click a `.csv` file in Finder.
-2.  Select **Open With** -> **CSV to Sheets** (or whatever you named your Automator app).
-3.  Alternatively, drag and drop `.csv` files onto the Automator app icon.
+A browser window opens for Google sign-in. This creates `token.pickle` on that Mac.
 
-The file will be uploaded, converted, and opened in your default browser.
+## Usage
 
+| Action | When to use |
+|---|---|
+| **Double-click** a `.csv` | Normal files |
+| **Right-click → Upload to Sheets** | Downloaded files (avoids Gatekeeper issues) |
 
-## Alternative: "Quick Action" (Recommended for Downloaded Files)
+## Keeping Macs in sync
 
-If you frequently download CSVs from the web (e.g., AWS, Bank statements), macOS might block the "Open With" method with a "malware" warning. The best workaround is to create a **Quick Action** instead of an Application.
+After pulling updates on any Mac, re-run:
 
-1.  Open **Automator**.
-2.  Select **New Document** -> **Quick Action**.
-3.  Configure the top settings:
-    *   Workflow receives current: **files or folders**
-    *   in: **Finder**
-    *   Image: **Spreadsheet** (optional)
-4.  Add the **"Run Shell Script"** action.
-    *   Pass input: **as arguments**
-    *   Command: `/Users/renebravo/Python/csv_to_drive/launcher.sh "$@"`
-5.  Save it as **"Upload to Sheets"**.
+```bash
+./install.sh
+```
 
-**Usage:**
-Right-click any CSV file -> **Quick Actions** -> **Upload to Sheets**.
-This usually bypasses the security warning without needing to modify file attributes.
+Shared via git: `launcher.sh`, `csv_to_sheets.py`, workflows, install script.
 
+Per-machine (not in git): `.venv/`, `credentials.json`, `token.pickle`, `~/Applications/Upload to Sheets.app`, `~/Library/Services/UploadToSheets.workflow`.
 
+## Troubleshooting
+
+**Downloaded CSV blocked by macOS ("cannot verify malware")**  
+Use **Right-click → Upload to Sheets** instead of double-click.
+
+**Double-click opens Numbers instead of uploading**  
+Re-run `./install.sh`, or set manually: right-click CSV → Get Info → Open with → Upload to Sheets → Change All.
